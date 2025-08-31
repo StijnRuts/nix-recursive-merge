@@ -9,8 +9,8 @@ Import with:
   recursive = (
     import (
       builtins.fetchurl {
-        url = "https://raw.githubusercontent.com/StijnRuts/nix-recursive-merge/xxx/recursive.nix";
-        sha256 = "xxx";
+        url = "https://raw.githubusercontent.com/StijnRuts/nix-recursive-merge/289afa0337338737c3d61da12eaea3cd2f30bf03/recursive.nix";
+        sha256 = "sha256:1a6wlrj21hgwc2gbfcdggyxgvg68vm3i1gvgbxdzqs47phqk3il0";
       }
     )
   );
