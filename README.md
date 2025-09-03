@@ -6,14 +6,12 @@ Import with:
 
 ```nix
 let
-recursive = (
-  import (
+  recursive = import (
     builtins.fetchurl {
       url = "https://raw.githubusercontent.com/StijnRuts/nix-recursive-merge/289afa0337338737c3d61da12eaea3cd2f30bf03/recursive.nix";
       sha256 = "sha256:1a6wlrj21hgwc2gbfcdggyxgvg68vm3i1gvgbxdzqs47phqk3il0";
     }
-  )
-);
+  );
 in
 recursive.<someFunction>
 ```
@@ -56,5 +54,36 @@ Or define a list of nix files to import and merge:
 recursive.mergeImports [
   ./a.nix
   ./b.nix
+]
+```
+
+## Using with flakes
+
+Recursive merge works for merging flakes, but if you try to use it you may run into an `error: file 'flake.nix' must be an attribute set`.
+This is bacause nix expects flake.nix to be a plain attribute set without any special syntax.
+This can be worked around by using [flakegen](https://github.com/jorsn/flakegen).
+
+flake.nix
+```nix
+# Do not modify! This file is generated.
+{
+  inputs.flakegen.url = "github:jorsn/flakegen";
+  outputs = inputs: inputs.flakegen ./flake.template.nix inputs;
+}
+```
+
+flake.template.nix
+```nix
+let
+  recursive = import (
+    builtins.fetchurl {
+      url = "https://raw.githubusercontent.com/StijnRuts/nix-recursive-merge/289afa0337338737c3d61da12eaea3cd2f30bf03/recursive.nix";
+      sha256 = "sha256:1a6wlrj21hgwc2gbfcdggyxgvg68vm3i1gvgbxdzqs47phqk3il0";
+    }
+  );
+in
+recursive.mergeImports [
+  ./partial_flake_a.nix
+  ./partial_flake_b.nix
 ]
 ```
