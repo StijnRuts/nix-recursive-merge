@@ -54,6 +54,21 @@ in
     };
   }
   {
+    name = "Test function and attrs merge";
+    actual =
+      let
+        f = x: { foo = x + 1; };
+        g = {
+          bar = 2;
+        };
+      in
+      (recursive.merge f g) 5;
+    expected = {
+      foo = 6;
+      bar = 2;
+    };
+  }
+  {
     name = "Test overlapping attributes";
     actual =
       recursive.merge

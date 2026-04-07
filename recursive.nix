@@ -27,6 +27,10 @@ rec {
 
     else if builtins.isFunction a && builtins.isFunction b then
       x: merge' (path ++ [ "<function>" ]) (a x) (b x)
+    else if builtins.isFunction a && builtins.isAttrs b then
+      x: merge' (path ++ [ "<function>" ]) (a x) b
+    else if builtins.isAttrs a && builtins.isFunction b then
+      x: merge' (path ++ [ "<function>" ]) a (b x)
 
     else if a == b then
       a
