@@ -115,6 +115,17 @@ in
     };
   }
   {
+    name = "Test mergeAttrs";
+    actual = recursive.mergeAttrs {
+      a = [ 1 ];
+      b = [ 2 ];
+    };
+    expected = [
+      1
+      2
+    ];
+  }
+  {
     name = "Test mergeImports";
     actual = recursive.mergeImports [
       ./test/a.nix
