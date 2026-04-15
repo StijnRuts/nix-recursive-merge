@@ -1,11 +1,12 @@
 let
-  recursive = import ./recursive.nix;
-  safeMerge = a: b: builtins.tryEval (builtins.toJSON (recursive.merge a b));
+  wrench = import ./wrench.nix;
+  strict = x: builtins.deepSeq x x;
+  safeMerge = a: b: builtins.tryEval (strict (wrench.merge a b));
 in
 [
   {
     name = "Test basic merge";
-    actual = recursive.merge { foo.bar.a = 1; } { foo.bar.b = 2; };
+    actual = wrench.merge { foo.bar.a = 1; } { foo.bar.b = 2; };
     expected = {
       foo = {
         bar = {
@@ -18,7 +19,7 @@ in
   {
     name = "Test list merge";
     actual =
-      recursive.merge
+      wrench.merge
         {
           a = [
             1
@@ -47,7 +48,7 @@ in
         f = x: { foo = x + 1; };
         g = x: { bar = x + 2; };
       in
-      (recursive.merge f g) 5;
+      (wrench.merge f g) 5;
     expected = {
       foo = 6;
       bar = 7;
@@ -62,7 +63,7 @@ in
           bar = 2;
         };
       in
-      (recursive.merge f g) 5;
+      (wrench.merge f g) 5;
     expected = {
       foo = 6;
       bar = 2;
@@ -71,7 +72,7 @@ in
   {
     name = "Test overlapping attributes";
     actual =
-      recursive.merge
+      wrench.merge
         {
           a = 1;
           b = 2;
@@ -104,8 +105,125 @@ in
     };
   }
   {
-    name = "Test mergeList";
-    actual = recursive.mergeList [
+    name = "Test merge with nulls";
+    actual = wrench.merge { a = null; } { a = 5; };
+    expected = {
+      a = 5;
+    };
+  }
+  {
+    name = "Test merge with both null";
+    actual = wrench.merge { a = null; } { a = null; };
+    expected = {
+      a = null;
+    };
+  }
+  {
+    name = "Test merge identical primitive";
+    actual = wrench.merge { a = 10; } { a = 10; };
+    expected = {
+      a = 10;
+    };
+  }
+  {
+    name = "Test merge mismatched primitive types";
+    actual = safeMerge { a = 1; } { a = true; };
+    expected = {
+      success = false;
+      value = false;
+    };
+  }
+  {
+    name = "Test merge deep nested attributes";
+    actual = wrench.merge { a.b.c = 1; } { a.b.d = 2; };
+    expected = {
+      a = {
+        b = {
+          c = 1;
+          d = 2;
+        };
+      };
+    };
+  }
+  {
+    name = "Test merge deep conflicting attributes";
+    actual = safeMerge { a.b.c = 1; } { a.b.c = "x"; };
+    expected = {
+      success = false;
+      value = false;
+    };
+  }
+  {
+    name = "Test merge list with null";
+    actual = wrench.merge {
+      a = [
+        1
+        2
+      ];
+    } { a = null; };
+    expected = {
+      a = [
+        1
+        2
+      ];
+    };
+  }
+  {
+    name = "Test merge null with list";
+    actual = wrench.merge { a = null; } {
+      a = [
+        3
+        4
+      ];
+    };
+    expected = {
+      a = [
+        3
+        4
+      ];
+    };
+  }
+  {
+    name = "Test merge functions returning matched types";
+    actual = (
+      (wrench.merge (x: { a = x; }) (_: {
+        a = [
+          3
+          4
+        ];
+      }))
+        [
+          1
+          2
+        ]
+    );
+    expected = {
+      a = [
+        1
+        2
+        3
+        4
+      ];
+    };
+  }
+  {
+    name = "Test merge functions returning mismatched types";
+    actual = builtins.tryEval (
+      strict (
+        (wrench.merge (x: { a = x; }) (_: {
+          a = "string";
+        }))
+          3
+      )
+    );
+    expected = {
+      success = false;
+      value = false;
+    };
+  }
+  {
+    name = "Test merge.list";
+    actual = wrench.merge.list [
       { a = 1; }
       { b = 2; }
     ];
@@ -115,8 +233,8 @@ in
     };
   }
   {
-    name = "Test mergeAttrs";
-    actual = recursive.mergeAttrs {
+    name = "Test merge.attrs";
+    actual = wrench.merge.attrs {
       a = [ 1 ];
       b = [ 2 ];
     };
@@ -124,16 +242,5 @@ in
       1
       2
     ];
-  }
-  {
-    name = "Test mergeImports";
-    actual = recursive.mergeImports [
-      ./test/a.nix
-      ./test/b.nix
-    ];
-    expected = {
-      a = 1;
-      b = 2;
-    };
   }
 ]
