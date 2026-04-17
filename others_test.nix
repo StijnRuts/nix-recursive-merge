@@ -66,6 +66,19 @@ in
     };
   }
   {
+    name = "Test over.attrs2";
+    actual = wrench.over.attrs2 (k: v: { ${v} = k; }) {
+      a = "x";
+      b = "y";
+      c = "z";
+    };
+    expected = {
+      x = "a";
+      y = "b";
+      z = "c";
+    };
+  }
+  {
     name = "Test over.function";
     actual = (wrench.over.function (_: x: x * 2) (x: x + 1)) 5;
     expected = 12;

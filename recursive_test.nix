@@ -1,7 +1,7 @@
 let
   wrench = import ./wrench.nix;
   strict = x: builtins.deepSeq x x;
-  safeMerge = a: b: builtins.tryEval (strict (wrench.merge a b));
+  safe = x: builtins.tryEval (strict x);
 in
 [
   {
@@ -89,8 +89,8 @@ in
   }
   {
     name = "Test mismatched attributes";
-    actual =
-      safeMerge
+    actual = safe (
+      wrench.merge
         {
           a = 1;
           b = 2;
@@ -98,7 +98,8 @@ in
         {
           b = "b";
           c = 3;
-        };
+        }
+    );
     expected = {
       success = false;
       value = false;
@@ -127,7 +128,7 @@ in
   }
   {
     name = "Test merge mismatched primitive types";
-    actual = safeMerge { a = 1; } { a = true; };
+    actual = safe (wrench.merge { a = 1; } { a = true; });
     expected = {
       success = false;
       value = false;
@@ -147,7 +148,7 @@ in
   }
   {
     name = "Test merge deep conflicting attributes";
-    actual = safeMerge { a.b.c = 1; } { a.b.c = "x"; };
+    actual = safe (wrench.merge { a.b.c = 1; } { a.b.c = "x"; });
     expected = {
       success = false;
       value = false;
@@ -208,13 +209,11 @@ in
   }
   {
     name = "Test merge functions returning mismatched types";
-    actual = builtins.tryEval (
-      strict (
-        (wrench.merge (x: { a = x; }) (_: {
-          a = "string";
-        }))
-          3
-      )
+    actual = safe (
+      (wrench.merge (x: { a = x; }) (_: {
+        a = "string";
+      }))
+        3
     );
     expected = {
       success = false;

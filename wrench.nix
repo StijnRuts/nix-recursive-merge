@@ -49,25 +49,59 @@ let
     x;
 in
 rec {
-  apply = over.type {
-    function = f: f;
-    null = _: v: v;
-    path = f: apply (import f);
-    list = fs: init: foldl' (v: f: apply f v) init fs;
-    attrs = v: apply (v.__functor v);
-  };
-
-  apply2 = f: arg: apply (apply f arg);
+  apply =
+    f:
+    if isFunction f then
+      f
+    else
+      over.type {
+        null = _: v: v;
+        path = f: apply (import f);
+        list = fs: init: foldl' (v: f: apply f v) init fs;
+        attrs = v: apply (v.__functor v);
+      } f;
 
   over = {
-    type = f: v: (f.${typeOf v} or f._fallback or value.unsupported) v;
-    nonNull = f: v: if v == null then null else apply f v;
-    list = f: map (apply f);
-    attrs = f: mapAttrs (_: apply f);
-    path = f: v: apply f (import v);
+    type = f: v: apply (f.${typeOf v} or f._fallback or value.unsupported) v;
+    nonNull =
+      f:
+      over.type {
+        null = value.keep;
+        _fallback = apply f;
+      };
+    list =
+      f:
+      over.type {
+        list = map (apply f);
+        null = value.keep;
+      };
+    attrs =
+      f:
+      over.type {
+        attrs = mapAttrs (_: apply f);
+        null = value.keep;
+      };
+    attrs2 =
+      f:
+      over.type {
+        attrs = [
+          (mapAttrs (apply2 f))
+          merge.attrs
+        ];
+        null = value.keep;
+      };
+    path =
+      f:
+      over.type {
+        path = p: apply f (import p);
+        _fallback = value.keep;
+      };
     function =
-      f: v: args:
-      apply (f args) (v args);
+      f:
+      over.type {
+        function = v: args: apply (apply f args) (apply v args);
+        _fallback = v: args: apply (apply f args) v;
+      };
   };
 
   to = {
