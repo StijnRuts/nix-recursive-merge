@@ -232,29 +232,14 @@ rec {
 
           else if isAttrs a && isAttrs b then
             foldl' (
-              acc: key:
-              let
-                aVal = a.${key} or null;
-                bVal = b.${key} or null;
-                newPath = path ++ [ key ];
-              in
-              if aVal == null then
-                acc // { ${key} = bVal; }
-              else if bVal == null then
-                acc // { ${key} = aVal; }
-              else
-                acc // { ${key} = merge' newPath aVal bVal; }
+              acc: key: acc // { ${key} = merge' (path ++ [ key ]) (a.${key} or null) (b.${key} or null); }
             ) { } (attrNames (a // b))
 
           else if isList a && isList b then
             a ++ b
 
-          else if isFunction a && isFunction b then
-            x: merge' (path ++ [ "<function>" ]) (a x) (b x)
-          else if isFunction a && isAttrs b then
-            x: merge' (path ++ [ "<function>" ]) (a x) b
-          else if isAttrs a && isFunction b then
-            x: merge' (path ++ [ "<function>" ]) a (b x)
+          else if isFunction a || isFunction b then
+            x: merge' (path ++ [ "<function>" ]) (to.function a x) (to.function b x)
 
           else if a == b then
             a
