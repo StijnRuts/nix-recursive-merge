@@ -60,7 +60,7 @@ recursive.mergeImports [
 ## Using with flakes
 
 Recursive merge works for merging flakes, but if you try to use it you may run into an `error: file 'flake.nix' must be an attribute set`.
-This is bacause nix expects flake.nix to be a plain attribute set without any special syntax.
+This is because nix expects flake.nix to be a plain attribute set without any special syntax.
 This can be worked around by using [flakegen](https://github.com/jorsn/flakegen).
 
 flake.nix
