@@ -11,15 +11,6 @@ in
     expected = 8;
   }
   {
-    name = "Test apply2";
-    actual =
-      let
-        f = a: b: a + b;
-      in
-      wrench.apply2 f 3 4;
-    expected = 7;
-  }
-  {
     name = "Test over.type";
     actual = wrench.over.type { int = x: x + 1; } 123;
     expected = 124;
@@ -65,19 +56,19 @@ in
       c = 6;
     };
   }
-  {
-    name = "Test over.attrs2";
-    actual = wrench.over.attrs2 (k: v: { ${v} = k; }) {
-      a = "x";
-      b = "y";
-      c = "z";
-    };
-    expected = {
-      x = "a";
-      y = "b";
-      z = "c";
-    };
-  }
+  #{
+  #  name = "Test over.attrs2";
+  #  actual = wrench.over.attrs2 (k: v: { ${v} = k; }) {
+  #    a = "x";
+  #    b = "y";
+  #    c = "z";
+  #  };
+  #  expected = {
+  #    x = "a";
+  #    y = "b";
+  #    z = "c";
+  #  };
+  #}
   {
     name = "Test over.function";
     actual = (wrench.over.function (_: x: x * 2) (x: x + 1)) 5;

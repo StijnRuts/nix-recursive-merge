@@ -49,17 +49,25 @@ let
     x;
 in
 rec {
-  apply =
-    f:
-    if isFunction f then
-      f
-    else
-      over.type {
-        null = _: v: v;
-        path = f: apply (import f);
-        list = fs: init: foldl' (v: f: apply f v) init fs;
-        attrs = v: apply (v.__functor v);
-      } f;
+  callable = {
+    map =
+      f: x:
+      if isFunction f || isAttrs f then
+        f x
+      else if isList f then
+        map (f': function.map f' x) f
+      else
+        throw "Tried to function.map unsupported type ${typeOf f}";
+
+    fold =
+      f: x:
+      if isFunction f || isAttrs f then
+        f x
+      else if isList f then
+        foldl' (x': f': apply f' x') x f
+      else
+        throw "Tried to function.fold unsupported type ${typeOf f}";
+  };
 
   over = {
     type = f: v: apply (f.${typeOf v} or f._fallback or value.unsupported) v;
@@ -79,15 +87,6 @@ rec {
       f:
       over.type {
         attrs = mapAttrs (_: apply f);
-        null = value.keep;
-      };
-    attrs2 =
-      f:
-      over.type {
-        attrs = [
-          (mapAttrs (apply2 f))
-          merge.attrs
-        ];
         null = value.keep;
       };
     path =
